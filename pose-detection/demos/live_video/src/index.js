@@ -120,6 +120,36 @@ async function checkGuiUpdate() {
   }
 }
 
+function initializeBarGraph() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'barGraph';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Hips'],
+      datasets: [{
+        label: 'Y-axis values for Hips',
+        data: [],
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',  // Set your desired color
+        borderColor: 'rgba(75, 192, 192, 1)',        // Set your desired color
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+
 function beginEstimatePosesStats() {
   startInferenceTime = (performance || Date).now();
 }
@@ -189,6 +219,16 @@ async function renderResult() {
       [camera.video, poses, STATE.isModelChanged];
   renderer.draw(rendererParams);
 }
+// ADD BARGRAPH OF Y_values FOR HIPS!
+const yValues =
+    poses.map(pose => pose.keypoints.find(k => k.name === 'hip').position.y);
+
+// Update the bar graph with the y-values
+if (chart) {
+  chart.data.datasets[0].data = yValues;
+  chart.update();
+}
+
 
 async function renderPrediction() {
   await checkGuiUpdate();
@@ -208,6 +248,9 @@ async function app() {
     return;
   }
   await setupDatGui(urlParams);
+
+  // Initialize the bar graph
+  chart = initializeBarGraph();
 
   stats = setupStats();
   const isWebGPU = STATE.backend === 'tfjs-webgpu';
